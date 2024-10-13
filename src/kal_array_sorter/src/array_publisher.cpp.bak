@@ -1,0 +1,47 @@
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <fmt/format.h>
+#include <fmt/ranges.h> // Include for fmt::join
+
+class ArrayPublisher : public rclcpp::Node
+{
+public:
+    ArrayPublisher() : Node("my_array_publisher")
+    {
+        // Publisher létrehozása az unsorted_array témához
+        publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("unsorted_array", 1);
+    }
+
+    void publish_array()
+    {
+        std::vector<double> data{5.21, 4.65, 12.13, -0.21, 0.001, 32.21};
+        unsorted_array_.data = data;
+
+        // Kiírás a konzolra
+        RCLCPP_INFO(this->get_logger(), "Publishing unsorted array: [%s]", 
+                    fmt::join(unsorted_array_.data, ", ").c_str());
+
+        publisher_->publish(unsorted_array_);
+    }
+
+private:
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_;
+    std_msgs::msg::Float64MultiArray unsorted_array_;
+};
+
+int main(int argc, char **argv)
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<ArrayPublisher>();
+    rclcpp::Rate loop_rate(1); // 1 Hz
+
+    while (rclcpp::ok())
+    {
+        node->publish_array();
+        rclcpp::spin_some(node);
+        loop_rate.sleep();
+    }
+
+    rclcpp::shutdown();
+    return 0;
+}

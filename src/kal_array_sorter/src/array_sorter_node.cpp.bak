@@ -1,0 +1,52 @@
+#include "std_msgs/msg/float64_multi_array.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <algorithm>
+#include <fmt/format.h>
+#include <fmt/ranges.h> // Include for fmt::join
+
+class ArraySorter : public rclcpp::Node
+{
+public:
+    ArraySorter() : Node("my_array_sorter")
+    {
+        subscriber_ = this->create_subscription<std_msgs::msg::Float64MultiArray>(
+            "unsorted_array", 10, std::bind(&ArraySorter::callback, this, std::placeholders::_1));
+
+        publisher_ = this->create_publisher<std_msgs::msg::Float64MultiArray>("sorted_array", 1);
+    }
+
+private:
+    void callback(const std_msgs::msg::Float64MultiArray::SharedPtr unsorted_array)
+    {
+        sorted_array_.data = unsorted_array->data; // másolás
+        std::sort(sorted_array_.data.begin(), sorted_array_.data.end());
+
+        // Kiírás a konzolra
+        RCLCPP_INFO(this->get_logger(), "Received unsorted array: [%s]", 
+                    fmt::format("{}", fmt::join(unsorted_array->data, ", ")));
+        RCLCPP_INFO(this->get_logger(), "Sorted array: [%s]", 
+                    fmt::format("{}", fmt::join(sorted_array_.data, ", ")));
+
+        publisher_->publish(sorted_array_);
+    }
+
+    rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr publisher_;
+    rclcpp::Subscription<std_msgs::msg::Float64MultiArray>::SharedPtr subscriber_;
+    std_msgs::msg::Float64MultiArray sorted_array_;
+};
+
+int main(int argc, char **argv)
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<ArraySorter>();
+    rclcpp::Rate rate(10);
+
+    while (rclcpp::ok())
+    {
+        rclcpp::spin_some(node);
+        rate.sleep();
+    }
+
+    rclcpp::shutdown();
+    return 0;
+}
