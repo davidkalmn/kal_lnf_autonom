@@ -20,15 +20,23 @@ find_package(ament_cmake REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+add_executable(array_publisher src/array_publisher.cpp)
+ament_target_dependencies(array_publisher rclcpp std_msgs)
+
 add_executable(array_sorter_node src/array_sorter_node.cpp)
 ament_target_dependencies(array_sorter_node rclcpp std_msgs)
+
 target_include_directories(array_sorter_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 target_compile_features(array_sorter_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS array_sorter_node
-  DESTINATION lib/${PROJECT_NAME})
+install(TARGETS
+  array_publisher
+  array_sorter_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
